@@ -1,0 +1,23 @@
+{
+  "name": "tictactoe",
+  "version": "1.0.0",
+  "description": "Project: Tic Tac Toe for The Odin Project Javascript Course",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jota98daut/top-tictactoe.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jota98daut/top-tictactoe/issues"
+  },
+  "homepage": "https://github.com/Jota98daut/top-tictactoe#readme",
+  "devDependencies": {
+    "eslint": "^8.31.0"
+  }
+}
