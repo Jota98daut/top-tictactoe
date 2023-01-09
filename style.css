@@ -7,5 +7,30 @@
 html,
 body {
   width: 100vw;
-  min-height: 100vh;
+  height: 100vh;
+}
+
+.centered {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#game-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  border: 1px solid black;
+}
+
+.game-grid-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border: 1px solid black;
+  font-size: 1.5rem;
 }
