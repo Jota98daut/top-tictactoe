@@ -87,8 +87,8 @@ const Player = (name, mark) => {
   return { getName, getMark };
 };
 
-let home = Player("joel", X);
-let away = Player("juan", O);
+let home = Player(prompt("Name of the first player") || "Player 1", X);
+let away = Player(prompt("Name of the second player") || "Player 2", O);
 
 const GameSession = (() => {
   let turn;
