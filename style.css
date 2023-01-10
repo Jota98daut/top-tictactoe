@@ -37,7 +37,6 @@ body {
   font-size: 1.5rem;
 }
 
-#turn-display:before {
-  content: "playing: ";
-  font-style: italic;
+.hidden {
+  visibility: hidden;
 }
