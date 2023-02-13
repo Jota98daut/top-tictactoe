@@ -1,149 +1,207 @@
-const gameGrid = document.querySelector("#game-grid");
-const textDisplay = document.querySelector("#text-display");
-const resetButton = document.querySelector("#reset");
-const X = "X";
-const O = "O";
-const N = "";
-
 const GameBoard = (() => {
   let boardArray = [
-    [N, N, N],
-    [N, N, N],
-    [N, N, N],
+    ["", "", ""],
+    ["", "", ""],
+    ["", "", ""],
   ];
 
   let availableCells = 9;
 
-  const render = () => {
-    gameGrid.innerHTML = "";
-    for (const [i, row] of boardArray.entries()) {
-      for (const [j, element] of row.entries()) {
-        let cell = document.createElement("div");
-        gameGrid.appendChild(cell);
-        cell.classList.add("game-grid-cell");
-        cell.textContent = element;
-        cell.addEventListener("click", () => GameSession.makeMove(i, j));
-      }
-    }
-  };
-
-  const placeMark = (mark, x, y) => {
+  function placeMark(mark, pos) {
+    const [x, y] = pos;
     if (x < 0 || x > 2 || y < 0 || y > 2) return false;
-    if (boardArray[x][y] != N) return false;
+    if (boardArray[x][y] != "") return false;
 
     boardArray[x][y] = mark;
     availableCells--;
     return true;
-  };
+  }
 
-  const checkWinner = () => {
+  function asMatrix() {
+    return [[...boardArray[0]], [...boardArray[1]], [...boardArray[2]]];
+  }
+
+  function reset() {
+    boardArray = [
+      ["", "", ""],
+      ["", "", ""],
+      ["", "", ""],
+    ];
+    availableCells = 9;
+  }
+
+  function checkFull() {
+    return availableCells == 0;
+  }
+
+  function checkWinner() {
     let winnerMark;
+    let b = boardArray;
 
     // Check rows
-    for (const row of boardArray) {
-      if (row[0] == row[1] && row[1] == row[2]) {
+    for (let row of boardArray) {
+      if (row[0] != "" && row[0] == row[1] && row[1] == row[2])
         winnerMark = row[0];
-        break;
-      }
     }
 
     // Check columns
-    let b = boardArray;
-    for (let j = 0; j < 3; j++) {
-      if (b[0][j] == b[1][j] && b[1][j] == b[2][j]) {
-        winnerMark = b[0][j];
-        break;
-      }
+    for (let i = 0; i < 3; i++) {
+      if (b[0][i] != "" && b[0][i] == b[1][i] && b[1][i] == b[2][i])
+        winnerMark = b[0][i];
     }
 
     // Check main diagonal
-    if (b[0][0] == b[1][1] && b[1][1] == b[2][2]) winnerMark = b[0][0];
+    if (b[0][0] != "" && b[0][0] == b[1][1] && b[1][1] == b[2][2])
+      winnerMark = b[0][0];
 
-    // Check the other diagonal
-    if (b[2][0] == b[1][1] && b[1][1] == b[0][2]) winnerMark = b[2][0];
+    // Check secondary diagonal
+    if (b[0][2] != "" && b[0][2] == b[1][1] && b[1][1] == b[2][0])
+      winnerMark = b[0][2];
 
     return winnerMark;
-  };
+  }
 
-  const reset = () => {
-    boardArray = [
-      [N, N, N],
-      [N, N, N],
-      [N, N, N],
-    ];
-    availableCells = 9;
-    render();
-  };
-
-  const checkFull = () => availableCells == 0;
-
-  return { placeMark, checkWinner, checkFull, reset, render };
+  return { placeMark, asMatrix, checkFull, checkWinner, reset };
 })();
 
 const Player = (name, mark) => {
-  const getMark = () => mark;
-  const getName = () => name;
+  let score = 0;
 
-  return { getName, getMark };
-};
-
-let home = Player(prompt("Name of the first player") || "Player 1", X);
-let away = Player(prompt("Name of the second player") || "Player 2", O);
-
-const GameSession = (() => {
-  let turn;
-  let winner;
-
-  const getTurn = () => turn;
-
-  const setTurn = (player) => {
-    turn = player;
-    textDisplay.textContent = `playing: ${player.getName()}`;
-  };
-
-  setTurn(home);
-
-  const setWinner = (player) => {
-    winner = player;
-    displayWinner(player);
-    resetButton.classList.remove("hidden");
-  };
-
-  const displayWinner = (winner) => {
-    textDisplay.textContent = `winner: ${winner.getName()}`;
-  };
-
-  const setDraw = () => {
-    textDisplay.textContent = `draw!`;
-    resetButton.classList.remove("hidden");
+  function getName() {
+    return name;
+  }
+  function setName(newName) {
+    name = newName;
+  }
+  function getMark() {
+    return mark;
+  }
+  function getScore() {
+    return score;
+  }
+  function incrementScore() {
+    score++;
   }
 
-  const makeMove = (x, y) => {
-    if (winner || GameBoard.checkFull()) return;
-    let success = GameBoard.placeMark(turn.getMark(), x, y);
-    if (success) {
-      GameBoard.render()
-      let winnerMark = GameBoard.checkWinner();
-      if (winnerMark) {
-        setWinner(home.getMark() == winnerMark ? home : away);
+  return { getName, setName, getMark, getScore, incrementScore };
+};
+
+const player1 = Player("Player1", "X");
+const player2 = Player("Player2", "O");
+
+const GameSession = (() => {
+  let winner;
+  let turn = player1;
+  let draw = false;
+
+  function getTurn() {
+    return turn;
+  }
+
+  function setTurn(player) {
+    turn = player;
+  }
+
+  function getWinner() {
+    return winner;
+  }
+
+  function setWinner(player) {
+    winner = player;
+  }
+
+  function getDraw() {
+    return draw;
+  }
+
+  function setDraw(d = true) {
+    draw = d;
+  }
+
+  function makeMove(player, pos) {
+    let mark = player.getMark();
+    if (winner || draw) return;
+    if (player != turn) return;
+    let wasPlaced = GameBoard.placeMark(mark, pos);
+    if (wasPlaced) {
+      if (GameBoard.checkWinner()) {
+        setWinner(player);
+        player.incrementScore();
       } else if (GameBoard.checkFull()) {
         setDraw();
       } else {
-        setTurn(turn == home ? away : home);
+        setTurn(turn == player1 ? player2 : player1);
       }
     }
-  };
+  }
 
-  const reset = () => {
+  function reset() {
     GameBoard.reset();
-    turn = home;
+    turn = player1;
     winner = undefined;
-    setTurn(home);
-    resetButton.classList.add("hidden");
-  };
+    draw = false;
+    setTurn(player1);
+  }
 
-  return { getTurn, makeMove, reset };
+  return { getTurn, getDraw, getWinner, makeMove, reset };
 })();
 
-GameBoard.render();
-resetButton.addEventListener("click", GameSession.reset);
+const resetButton = document.querySelector("#reset");
+const scoresDisplay = document.querySelector("#scores");
+const resultDisplay = document.querySelector("#result");
+const cells = document.querySelectorAll(".game-grid-cell");
+
+function updateScores() {
+  scoresDisplay.textContent = `${player1.getName()} ${player1.getScore()} - ${player2.getScore()} ${player2.getName()}`;
+}
+
+function renderBoard() {
+  let m = GameBoard.asMatrix();
+
+  for (let cell of cells) {
+    let x = cell.dataset.x;
+    let y = cell.dataset.y;
+    cell.textContent = m[x][y];
+  }
+}
+
+function handleClickOnCell(e) {
+  let cell = e.target;
+  let x = cell.dataset.x;
+  let y = cell.dataset.y;
+  let winner;
+
+  GameSession.makeMove(GameSession.getTurn(), [x, y]);
+  renderBoard();
+
+  winner = GameSession.getWinner();
+  if (winner || GameSession.getDraw()) {
+    finishGame(winner);
+  }
+}
+
+function finishGame(winner) {
+  updateScores();
+  resultDisplay.textContent = winner ? `${winner.getName()} wins!` : "Draw!";
+  resetButton.classList.remove("hidden");
+}
+
+function handleReset() {
+  GameSession.reset();
+  resetButton.classList.add("hidden");
+  resultDisplay.textContent = "";
+  renderBoard();
+}
+
+function initialize() {
+  updateScores();
+  renderBoard();
+  
+  for (let cell of cells) {
+    cell.addEventListener("click", handleClickOnCell);
+  }
+
+  resetButton.addEventListener("click", handleReset);
+}
+
+initialize();
