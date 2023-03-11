@@ -294,6 +294,8 @@ function renderBoard() {
 }
 
 function handleClickOnCell(e) {
+  if (GameSession.getTurn() !== player) return;
+
   let cell = e.target;
   let x = cell.dataset.x;
   let y = cell.dataset.y;

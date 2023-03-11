@@ -9,9 +9,16 @@ body {
   width: 100vw;
   height: 100vh;
   font-family: system-ui, sans-serif;
+  color: white;
 }
 
 .centered {
+  background: rgb(255, 0, 0);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 0, 0, 1) 0%,
+    rgba(0, 0, 255, 1) 100%
+  );
   height: 100%;
   width: 100%;
   display: flex;
@@ -25,17 +32,34 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  border: 1px solid black;
+  border: 3px solid white;
+  border-radius: 15px;
 }
 
 .game-grid-cell {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
-  border: 1px solid black;
-  font-size: 1.5rem;
+  width: 75px;
+  height: 75px;
+  border: 1px solid white;
+  font-size: 2.25rem;
+}
+
+.game-grid-cell.top-row {
+  border-top-style: none;
+}
+
+.game-grid-cell.bottom-row {
+  border-bottom-style: none;
+}
+
+.game-grid-cell.left-col {
+  border-left-style: none;
+}
+
+.game-grid-cell.right-col {
+  border-right-style: none;
 }
 
 .hidden {
