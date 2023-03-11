@@ -86,12 +86,138 @@ const Player = (name, mark) => {
   return { getName, setName, getMark, getScore, incrementScore };
 };
 
-const player1 = Player("Player1", "X");
-const player2 = Player("Player2", "O");
+const player = Player("Player", "X");
+const computer = Player("AI", "O");
+
+const Computer = (() => {
+  function turn(m) {
+    let xCount = 0;
+    let oCount = 0;
+
+    for (let row of m) {
+      for (let s of row) {
+        if (s === "X") xCount++;
+        if (s === "O") oCount++;
+      }
+    }
+
+    if (xCount > oCount) return "O";
+    else return "X";
+  }
+
+  function checkWinner(m) {
+    let winnerMark;
+
+    // Check rows
+    for (let row of m) {
+      if (row[0] != "" && row[0] == row[1] && row[1] == row[2])
+        winnerMark = row[0];
+    }
+
+    // Check columns
+    for (let i = 0; i < 3; i++) {
+      if (m[0][i] != "" && m[0][i] == m[1][i] && m[1][i] == m[2][i])
+        winnerMark = m[0][i];
+    }
+
+    // Check main diagonal
+    if (m[0][0] != "" && m[0][0] == m[1][1] && m[1][1] == m[2][2])
+      winnerMark = m[0][0];
+
+    // Check secondary diagonal
+    if (m[0][2] != "" && m[0][2] == m[1][1] && m[1][1] == m[2][0])
+      winnerMark = m[0][2];
+
+    return winnerMark;
+  }
+
+  function checkDraw(m) {
+    return m.every((row) => row.every((cell) => cell !== ""));
+  }
+
+  function isEnded(m) {
+    return checkWinner(m) !== undefined || checkDraw(m);
+  }
+
+  function successors(m) {
+    let t = turn(m);
+    let succs = [];
+
+    for (let [i, row] of m.entries()) {
+      for (let [j, cell] of row.entries()) {
+        if (cell === "") {
+          let succ = [[...m[0]], [...m[1]], [...m[2]]];
+          succ[i][j] = t;
+          succs.push(succ);
+        }
+      }
+    }
+
+    return succs;
+  }
+
+  function value(m) {
+    let winner = checkWinner(m);
+
+    if (winner === player.getMark()) return 1;
+    else if (winner === computer.getMark()) return -1;
+    else return 0;
+  }
+
+  function possibleMoves(m) {
+    let moves = [];
+
+    for (let [i, row] of m.entries()) {
+      for (let [j, cell] of row.entries()) {
+        if (cell === "") moves.push([i, j]);
+      }
+    }
+
+    return moves;
+  }
+
+  function minimax(m) {
+    if (isEnded(m)) return value(m);
+
+    let x = -1;
+    let y = 1;
+
+    successors(m).forEach((succ) => {
+      if (turn(m) === player.getMark()) x = Math.max(x, minimax(succ));
+      else y = Math.min(y, minimax(succ));
+    });
+
+    return turn(m) === player.getMark() ? x : y;
+  }
+
+  function makeMove() {
+    if (GameSession.getTurn() !== computer) return;
+
+    let m = GameBoard.asMatrix();
+    let bestMove;
+    let bestSuccessorValue = 1;
+
+    possibleMoves(m).forEach((move) => {
+      let [i, j] = move;
+      let succ = [[...m[0]], [...m[1]], [...m[2]]];
+      succ[i][j] = "O";
+      let succValue = minimax(succ);
+      if (succValue < bestSuccessorValue) {
+        bestMove = move;
+        bestSuccessorValue = succValue;
+      }
+    });
+
+    console.log(bestMove);
+    GameSession.makeMove(computer, bestMove);
+  }
+
+  return { makeMove };
+})();
 
 const GameSession = (() => {
   let winner;
-  let turn = player1;
+  let turn = player;
   let draw = false;
 
   function getTurn() {
@@ -118,29 +244,31 @@ const GameSession = (() => {
     draw = d;
   }
 
-  function makeMove(player, pos) {
-    let mark = player.getMark();
+  function makeMove(p, pos) {
     if (winner || draw) return;
-    if (player != turn) return;
+    if (p !== turn) return;
+
+    let mark = p.getMark();
     let wasPlaced = GameBoard.placeMark(mark, pos);
     if (wasPlaced) {
       if (GameBoard.checkWinner()) {
-        setWinner(player);
-        player.incrementScore();
+        setWinner(p);
+        p.incrementScore();
       } else if (GameBoard.checkFull()) {
         setDraw();
       } else {
-        setTurn(turn == player1 ? player2 : player1);
+        setTurn(turn == player ? computer : player);
+        console.log(`Current turn ${turn.getName()}`);
       }
     }
   }
 
   function reset() {
     GameBoard.reset();
-    turn = player1;
+    turn = player;
     winner = undefined;
     draw = false;
-    setTurn(player1);
+    setTurn(player);
   }
 
   return { getTurn, getDraw, getWinner, makeMove, reset };
@@ -152,7 +280,7 @@ const resultDisplay = document.querySelector("#result");
 const cells = document.querySelectorAll(".game-grid-cell");
 
 function updateScores() {
-  scoresDisplay.textContent = `${player1.getName()} ${player1.getScore()} - ${player2.getScore()} ${player2.getName()}`;
+  scoresDisplay.textContent = `${player.getName()} ${player.getScore()} - ${computer.getScore()} ${computer.getName()}`;
 }
 
 function renderBoard() {
@@ -171,13 +299,22 @@ function handleClickOnCell(e) {
   let y = cell.dataset.y;
   let winner;
 
-  GameSession.makeMove(GameSession.getTurn(), [x, y]);
+  GameSession.makeMove(player, [x, y]);
   renderBoard();
 
   winner = GameSession.getWinner();
   if (winner || GameSession.getDraw()) {
     finishGame(winner);
   }
+
+  setTimeout(() => {
+    Computer.makeMove();
+    renderBoard();
+    winner = GameSession.getWinner();
+    if (winner || GameSession.getDraw()) {
+      finishGame(winner);
+    }
+  }, 500);
 }
 
 function finishGame(winner) {
@@ -196,7 +333,7 @@ function handleReset() {
 function initialize() {
   updateScores();
   renderBoard();
-  
+
   for (let cell of cells) {
     cell.addEventListener("click", handleClickOnCell);
   }
