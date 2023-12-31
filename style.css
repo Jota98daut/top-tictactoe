@@ -65,3 +65,17 @@ body {
 .hidden {
   visibility: hidden;
 }
+
+button#reset {
+  font-size: 1.2em;
+  padding: 10px;
+}
+
+#text-display {
+  font-size: 1.1em;
+  text-align: center;
+}
+
+#text-display > #result {
+  font-weight: bold;
+}
